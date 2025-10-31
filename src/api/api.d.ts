@@ -23,7 +23,7 @@ type CountriesMap = Record<string, Country>;
 type HotelsMap = Record<string, Hotel>;
 
 // Пошук цін (оффер)
-type PriceOffer = {
+export type PriceOffer = {
   id: string; // UUID
   amount: number; // 1500–4000
   currency: "usd"; // нижній регістр за поточною реалізацією
@@ -32,7 +32,7 @@ type PriceOffer = {
   hotelID?: string; // додається в результатах пошуку цін
 };
 // Відповідь пошуку цін (готові результати)
-type PricesMap = Record<string, PriceOffer>;
+export type PricesMap = Record<string, PriceOffer>;
 
 export type GeoEntity =
   | (Country & { type: "country" })

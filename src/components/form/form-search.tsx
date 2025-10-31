@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useEffect } from "react";
 import {
   getCountries,
@@ -8,7 +8,8 @@ import {
   GeoResponse,
 } from "../../api/api";
 
-import "./form-search";
+import "./form.scss";
+import DropdownList from "../dropdown/dropdown";
 
 export default function TourSearchForm() {
   const [query, setQuery] = useState("");
@@ -26,8 +27,8 @@ export default function TourSearchForm() {
         setLoading(true);
         const res = await getCountries(); // Promise<Response>
         const data: Record<string, Country> = await res.json(); // розпарсили JSON
-        const countries: GeoEntity[] = Object.values(data).map((c) => ({
-          ...c,
+        const countries: GeoEntity[] = Object.values(data).map((country) => ({
+          ...country,
           type: "country",
         }));
         setResults(countries);
@@ -58,52 +59,115 @@ export default function TourSearchForm() {
   }, [query]);
 
   // --- Вибір елемента ---
-  const handleSelect = (item: GeoEntity) => {
+  const handleSelect = useCallback((item: GeoEntity) => {
     setSelected(item);
     setQuery(item.name);
     setOpen(false);
-  };
+  }, []);
 
   // --- Сабміт форми ---
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log("🔍 Пошук:", selected || query);
   };
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      console.log("🔍 Пошук:", selected || query);
+    }
+  };
 
+  // --- Клік (фокус) на інпут ---
+  const handleFocus = async () => {
+    setOpen(true);
+
+    // Якщо нічого не введено — показати список країн
+    if (!query) {
+      setSelected(null);
+      try {
+        setLoading(true);
+        const res = await getCountries();
+        const data: Record<string, Country> = await res.json();
+        const countries: GeoEntity[] = Object.values(data).map((country) => ({
+          ...country,
+          type: "country",
+        }));
+        setResults(countries);
+      } catch (error) {
+        console.error("Помилка getCountries:", error);
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    // Якщо вже є вибір
+    if (selected) {
+      if (selected.type === "country") {
+        // Якщо вибрана країна — показати всі країни
+        try {
+          setLoading(true);
+          const res = await getCountries();
+          const data: Record<string, Country> = await res.json();
+          const countries: GeoEntity[] = Object.values(data).map((country) => ({
+            ...country,
+            type: "country",
+          }));
+          setResults(countries);
+        } catch (error) {
+          console.error("Помилка getCountries:", error);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        // Якщо вибране місто або готель — пошукати за текстом у полі
+        try {
+          setLoading(true);
+          const res = await searchGeo(query);
+          const data: GeoResponse = await res.json();
+          setResults(Object.values(data));
+        } catch (error) {
+          console.error("Помилка searchGeo:", error);
+        } finally {
+          setLoading(false);
+        }
+      }
+    } else {
+      // Якщо просто введений текст без вибору
+      try {
+        setLoading(true);
+        const res = await searchGeo(query);
+        const data: GeoResponse = await res.json();
+        setResults(Object.values(data));
+      } catch (error) {
+        console.error("Помилка searchGeo:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
   return (
-    <form onSubmit={handleSubmit} className="tour-search">
-      <h2>Форма пошуку турів</h2>
-
+    <form onSubmit={handleSubmit} className="tour_search">
+      <h2 className="tour_search-title">Форма пошуку турів</h2>
       <div className="input-wrapper">
         <input
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onFocus={() => setOpen(true)}
-          placeholder="Куди летимо?"
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setSelected(null);
+          }}
+          onFocus={() => {
+            setOpen(true);
+            handleFocus();
+          }}
+          onKeyDown={handleKeyDown}
         />
+        <div id="overlay-dropdown"></div>
         {open && (
-          <ul className="dropdown">
-            {loading && <li className="loading">Завантаження...</li>}
-
-            {!loading &&
-              results.map((item) => (
-                <li key={item.id} onClick={() => handleSelect(item)}>
-                  {item.type === "country" && (
-                    <img
-                      src={(item as Country).flag}
-                      alt={item.name}
-                      width={24}
-                      height={16}
-                    />
-                  )}
-                  <span>
-                    {item.name}
-                    {item.type === "city" && " 🏙️"}
-                    {item.type === "hotel" && " 🏨"}
-                  </span>
-                </li>
-              ))}
-          </ul>
+          <DropdownList
+            handleSelect={handleSelect}
+            loading={loading}
+            results={results}
+          />
         )}
       </div>
 
