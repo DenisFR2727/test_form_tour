@@ -1,0 +1,15 @@
+.dropdown_item {
+  display: flex;
+  align-items: center;
+  flex-direction: row-reverse;
+
+  .dropdown_item-name {
+    padding-left: 5px;
+  }
+  .dropdown_item-city {
+    padding-right: 10px;
+  }
+  .dropdown_item-hotel {
+    padding-right: 10px;
+  }
+}

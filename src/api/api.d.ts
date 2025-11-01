@@ -63,3 +63,8 @@ type StopSearchResponse = {
   status: "cancelled";
   message: string;
 };
+export type SearchPricesAPIResponse =
+  | { status: "inProgress"; waitUntil: string }
+  | { status: "done"; results: PricesMap }
+  | { prices: PricesMap }
+  | ErrorResponse;

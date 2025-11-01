@@ -8,6 +8,7 @@ interface DropdownListProps {
   handleSelect: (item: GeoEntity) => void;
 }
 import "../form/form.scss";
+import "./dropdown.scss";
 
 export default function DropdownList({
   loading,
@@ -29,11 +30,15 @@ export default function DropdownList({
                   height={16}
                 />
               )}
-              <span>
-                {item.name}
-                {item.type === "city" && <span>🏙️</span>}
-                {item.type === "hotel" && <span>🏨</span>}
-              </span>
+              <div className="dropdown_item">
+                <span className="dropdown_item-name">{item.name}</span>
+                {item.type === "city" && (
+                  <span className="dropdown_item-city">🏙️</span>
+                )}
+                {item.type === "hotel" && (
+                  <span className="dropdown_item-hotel">🏨</span>
+                )}
+              </div>
             </li>
           ))}
       </ul>
