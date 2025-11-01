@@ -1,5 +1,4 @@
-import { useCallback, useState } from "react";
-import { useEffect } from "react";
+import { useCallback } from "react";
 import {
   getCountries,
   searchGeo,
@@ -13,71 +12,35 @@ import {
 import DropdownList from "../dropdown/dropdown";
 
 import "./form.scss";
+import { useAppDispatch, useAppSelector } from "../../hooks/hooks";
+import useFetchTours from "./hooks";
+import {
+  setError,
+  setLoading,
+  setOpen,
+  setQuery,
+  setResults,
+  setSelected,
+  setTours,
+} from "./tourSlice";
 
 export default function TourSearchForm() {
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState<GeoEntity[]>([]);
-  const [selected, setSelected] = useState<GeoEntity | null>(null);
-  const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [tours, setTours] = useState<PriceOffer[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const dispatch = useAppDispatch();
+  const loading = useAppSelector((state) => state.loading);
+  const selected = useAppSelector((state) => state.selected);
+  const results = useAppSelector((state) => state.results);
+  const tours = useAppSelector((state) => state.tours);
 
-  // --- Завантаження країн при відкритті інпуту ---
-  useEffect(() => {
-    if (!open || query) return;
-
-    (async () => {
-      try {
-        setLoading(true);
-        const res = await getCountries();
-        const data: Record<string, Country> = await res.json();
-        const countries: GeoEntity[] = Object.values(data).map((country) => ({
-          ...country,
-          type: "country",
-        }));
-        setResults(countries);
-      } catch (error) {
-        console.error("Помилка getCountries:", error);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [open, query]);
-
-  // --- Пошук при введенні тексту ---
-  useEffect(() => {
-    if (!query) return;
-
-    (async () => {
-      try {
-        setLoading(true);
-        const res = await searchGeo(query); // Promise<Response>
-        const data: GeoResponse = await res.json();
-        setResults(Object.values(data)); // перетворюємо у масив GeoEntity
-      } catch (error) {
-        console.error("Помилка searchGeo:", error);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [query]);
-
-  // --- Вибір елемента ---
-  const handleSelect = useCallback((item: GeoEntity) => {
-    setSelected(item);
-    setQuery(item.name);
-    setOpen(false);
-  }, []);
+  const { query, open, handleSelect } = useFetchTours();
 
   // --- Сабміт форми ---
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selected?.id) return;
 
-    setError(null);
-    setTours([]);
-    setLoading(true);
+    dispatch(setError(null));
+    dispatch(setTours([]));
+    dispatch(setLoading(true));
 
     try {
       const res = await startSearchPrices(String(selected?.id));
@@ -93,9 +56,9 @@ export default function TourSearchForm() {
       console.log(tours);
     } catch (error) {
       console.error("❌ Помилка startSearchPrices:", error);
-      setError("Не вдалося запустити пошук турів.");
+      dispatch(setError("Не вдалося запустити пошук турів."));
     } finally {
-      setLoading(false);
+      dispatch(setLoading(false));
     }
   };
 
@@ -125,7 +88,7 @@ export default function TourSearchForm() {
           // 🟢 Випадок 2: статус "done"
           if (data.status === "done" && data.results) {
             console.log("✅ Готові тури:", data.results);
-            setTours(data.results);
+            dispatch(setTours(data.results));
             break;
           }
 
@@ -136,7 +99,8 @@ export default function TourSearchForm() {
             const resultsArray: PriceOffer[] = Object.entries(data.prices).map(
               ([key, value]) => ({ ...(value as PriceOffer), id: key })
             );
-            setTours(resultsArray);
+            dispatch(setTours(resultsArray));
+            dispatch(setTours(resultsArray));
             break;
           }
 
@@ -149,7 +113,7 @@ export default function TourSearchForm() {
         }
       }
     },
-    []
+    [dispatch]
   );
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -161,24 +125,25 @@ export default function TourSearchForm() {
 
   // --- Клік (фокус) на інпут ---
   const handleFocus = async () => {
-    setOpen(true);
+    dispatch(setOpen(true));
 
     // Якщо нічого не введено — показати список країн
     if (!query) {
-      setSelected(null);
+      dispatch(setSelected(null));
+
       try {
-        setLoading(true);
+        dispatch(setLoading(true));
         const res = await getCountries();
         const data: Record<string, Country> = await res.json();
         const countries: GeoEntity[] = Object.values(data).map((country) => ({
           ...country,
           type: "country",
         }));
-        setResults(countries);
+        dispatch(setResults(countries));
       } catch (error) {
         console.error("Помилка getCountries:", error);
       } finally {
-        setLoading(false);
+        dispatch(setLoading(false));
       }
       return;
     }
@@ -188,43 +153,43 @@ export default function TourSearchForm() {
       if (selected.type === "country") {
         // Якщо вибрана країна — показати всі країни
         try {
-          setLoading(true);
+          dispatch(setLoading(true));
           const res = await getCountries();
           const data: Record<string, Country> = await res.json();
           const countries: GeoEntity[] = Object.values(data).map((country) => ({
             ...country,
             type: "country",
           }));
-          setResults(countries);
+          dispatch(setResults(countries));
         } catch (error) {
           console.error("Помилка getCountries:", error);
         } finally {
-          setLoading(false);
+          dispatch(setLoading(false));
         }
       } else {
         // Якщо вибране місто або готель — пошукати за текстом у полі
         try {
-          setLoading(true);
+          dispatch(setLoading(true));
           const res = await searchGeo(query);
           const data: GeoResponse = await res.json();
-          setResults(Object.values(data));
+          dispatch(setResults(Object.values(data)));
         } catch (error) {
           console.error("Помилка searchGeo:", error);
         } finally {
-          setLoading(false);
+          dispatch(setLoading(false));
         }
       }
     } else {
       // Якщо просто введений текст без вибору
       try {
-        setLoading(true);
+        dispatch(setLoading(true));
         const res = await searchGeo(query);
         const data: GeoResponse = await res.json();
-        setResults(Object.values(data));
+        dispatch(setResults(Object.values(data)));
       } catch (error) {
         console.error("Помилка searchGeo:", error);
       } finally {
-        setLoading(false);
+        dispatch(setLoading(false));
       }
     }
   };
@@ -235,11 +200,11 @@ export default function TourSearchForm() {
         <input
           value={query}
           onChange={(e) => {
-            setQuery(e.target.value);
-            setSelected(null);
+            dispatch(setQuery(e.target.value));
+            dispatch(setSelected(null));
           }}
           onFocus={() => {
-            setOpen(true);
+            dispatch(setOpen(true));
             handleFocus();
           }}
           onKeyDown={handleKeyDown}
