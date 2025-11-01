@@ -67,7 +67,7 @@ export default function TourSearchForm() {
       console.log(`⏳ Очікування ${delay}ms перед getSearchPrices...`);
 
       await new Promise((resolve) => setTimeout(resolve, Math.max(0, delay)));
-      // sss
+      // sssвв
       let attempt = 0;
       while (attempt < 10) {
         attempt++;
