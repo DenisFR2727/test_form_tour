@@ -88,4 +88,3 @@ export default function useTourDetail(priceId: string | undefined) {
 
   return { price, hotel, countries, loading, error };
 }
-
