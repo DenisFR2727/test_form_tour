@@ -29,7 +29,7 @@
   color: #2196f3;
   text-decoration: none;
   font-size: 14px;
-  
+
   &:hover {
     text-decoration: underline;
   }
@@ -161,7 +161,7 @@
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.3s ease;
-  
+
   &:hover {
     background-color: #d0d0d0;
   }
@@ -170,7 +170,7 @@
 .tour-detail-no-hotel {
   padding: 24px;
   text-align: center;
-  
+
   p {
     margin: 0 0 24px 0;
     font-size: 16px;
@@ -183,15 +183,14 @@
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .tour-detail-booking-info {
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
   }
-  
+
   .tour-detail-button {
     width: 100%;
   }
 }
-

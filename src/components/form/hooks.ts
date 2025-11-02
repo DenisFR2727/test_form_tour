@@ -1,4 +1,4 @@
-import { useCallback, useEffect, MutableRefObject } from "react";
+import { useCallback, useEffect, RefObject } from "react";
 import {
   Country,
   ErrorResponse,
@@ -18,7 +18,6 @@ import {
   setResults,
   setSelected,
   setTours,
-  setActiveSearchToken,
 } from "./tourSlice";
 import { handleApiError } from "./error";
 
@@ -102,7 +101,7 @@ export const useFetchSearchResults = () => {
       token: string,
       delay: number,
       maxRetries: number,
-      currentTokenRef?: MutableRefObject<string | null>
+      currentTokenRef?: RefObject<string>
     ) => {
       // Перевіряємо чи це все ще актуальний токен
       if (

@@ -173,11 +173,7 @@ export default function TourDetailPage() {
               </div>
             </div>
 
-            <img
-              src={hotel.img}
-              alt={hotel.name}
-              className="tour-detail-img"
-            />
+            <img src={hotel.img} alt={hotel.name} className="tour-detail-img" />
 
             {hotel.description && (
               <div className="tour-detail-section">
@@ -231,4 +227,3 @@ export default function TourDetailPage() {
     </div>
   );
 }
-

@@ -1,5 +1,4 @@
-import { useRef } from "react";
-import { startSearchPrices, stopSearchPrices, GeoEntity } from "../../api/api";
+import { startSearchPrices, GeoEntity } from "../../api/api";
 import DropdownList from "../dropdown/dropdown";
 import Loading from "../loading/loading";
 
@@ -13,7 +12,6 @@ import {
   setQuery,
   setSelected,
   setTours,
-  setActiveSearchToken,
 } from "./tourSlice";
 import { handleApiError } from "./error";
 
@@ -29,7 +27,6 @@ function getCountryID(selected: GeoEntity | null): string | null {
     return selected.countryId;
   }
 
-  // Для міст - використовуємо countryId якщо він є
   if (selected.type === "city" && selected.countryId) {
     return selected.countryId;
   }
@@ -43,32 +40,15 @@ export default function TourSearchForm() {
   const selected = useAppSelector((state) => state.selected);
   const results = useAppSelector((state) => state.results);
   const error = useAppSelector((state) => state.error);
-  const activeSearchToken = useAppSelector(
-    (state) => state.activeSearchToken
-  );
 
   const { query, open, handleSelect } = useFetchTours();
   const { fetchSearchResults } = useFetchSearchResults();
-  const currentTokenRef = useRef<string | null>(null);
 
   // --- Сабміт форми ---
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const countryID = getCountryID(selected);
     if (!countryID) return;
-
-    // Скасовуємо попередній пошук якщо є
-    if (activeSearchToken) {
-      try {
-        await stopSearchPrices(activeSearchToken);
-      } catch (err) {
-        // Логуємо помилку, але не блокуємо новий пошук
-        console.error("Помилка скасування пошуку:", err);
-      }
-      // Очищуємо токен
-      dispatch(setActiveSearchToken(null));
-      currentTokenRef.current = null;
-    }
 
     dispatch(setError(null));
     dispatch(setTours([]));
@@ -85,21 +65,11 @@ export default function TourSearchForm() {
       const json = await res.json();
       const { token, waitUntil } = json;
 
-      // Встановлюємо новий токен
-      dispatch(setActiveSearchToken(token));
-      currentTokenRef.current = token;
-
       const delay = new Date(waitUntil).getTime() - Date.now();
 
-      await fetchSearchResults(token, delay, 2, currentTokenRef);
-
-      // Очищуємо токен після успішного завершення
-      dispatch(setActiveSearchToken(null));
-      currentTokenRef.current = null;
+      await fetchSearchResults(token, delay, 2);
     } catch (error: unknown) {
       dispatch(setError(handleApiError(error)));
-      dispatch(setActiveSearchToken(null));
-      currentTokenRef.current = null;
     } finally {
       dispatch(setLoading(false));
     }
@@ -137,9 +107,7 @@ export default function TourSearchForm() {
         )}
       </div>
 
-      <button type="submit" disabled={loading}>
-        Знайти
-      </button>
+      <button type="submit">Знайти</button>
       <div>
         {loading && <Loading />}
         {error && <p className="error">{error}</p>}

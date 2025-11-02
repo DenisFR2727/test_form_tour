@@ -1,110 +1,15 @@
-import { useEffect, useState } from "react";
-import { useAppDispatch, useAppSelector } from "../../hooks/hooks";
-import { getHotels, HotelsMap, getCountries, Country } from "../../api/api";
-import { setHotels } from "../form/tourSlice";
-import Loading from "../loading/loading";
+import { useAppSelector } from "../../hooks/hooks";
 import { formatDate, formatPrice } from "../../utils/formatters";
 import { Link } from "react-router-dom";
+import Loading from "../loading/loading";
+import useCardHotels from "./hooks";
+
 import "./cards.scss";
 
 export default function TourResults() {
-  const dispatch = useAppDispatch();
-  const tours = useAppSelector((state) => state.tours);
-  const hotels = useAppSelector((state) => state.hotels);
-  const selected = useAppSelector((state) => state.selected);
   const loading = useAppSelector((state) => state.loading);
   const error = useAppSelector((state) => state.error);
-  const [countries, setCountries] = useState<Record<string, Country>>({});
-
-  // Завантаження країн для прапорців
-  useEffect(() => {
-    if (Object.keys(countries).length === 0) {
-      (async () => {
-        try {
-          const res = await getCountries();
-          const countriesData = await res.json();
-          setCountries(countriesData);
-        } catch (error) {
-          console.error("Помилка завантаження країн:", error);
-        }
-      })();
-    }
-  }, [countries]);
-
-  // Витягнення countryID з обраного елемента
-  const getCountryID = (): string | null => {
-    if (!selected) {
-      // Якщо немає обраного, спробуємо знайти countryID через готелі
-      const firstTour = tours.find((tour) => tour.hotelID);
-      if (firstTour?.hotelID) {
-        const hotel = Object.values(hotels).find(
-          (h) => String(h.id) === firstTour.hotelID
-        );
-        return hotel?.countryId || null;
-      }
-      return null;
-    }
-
-    if (selected.type === "country") {
-      return selected.id;
-    }
-
-    if (selected.type === "hotel") {
-      return selected.countryId;
-    }
-
-    if (selected.type === "city" && selected.countryId) {
-      return selected.countryId;
-    }
-
-    return null;
-  };
-
-  // Завантаження готелів для країни
-  useEffect(() => {
-    const countryID = getCountryID();
-    if (!countryID || tours.length === 0) {
-      return;
-    }
-
-    // Перевіряємо, чи всі готелі для турів вже завантажені
-    const missingHotelIds = tours
-      .filter((tour) => tour.hotelID)
-      .map((tour) => tour.hotelID!)
-      .filter((hotelId) => !hotels[hotelId]);
-
-    if (missingHotelIds.length === 0) {
-      // Всі готелі вже завантажені
-      return;
-    }
-
-    // Перевіряємо, чи готелі для цієї країни вже завантажені
-    const countryHotels = Object.values(hotels).filter(
-      (h) => h.countryId === countryID
-    );
-
-    if (countryHotels.length > 0) {
-      // Готелі для цієї країни вже завантажені
-      return;
-    }
-
-    (async () => {
-      try {
-        const res = await getHotels(countryID);
-        if (res.ok) {
-          const hotelsData = await res.json();
-          // Зберігаємо готелі з ключем hotel.id для швидкого пошуку
-          const hotelsMap: HotelsMap = {};
-          Object.values(hotelsData).forEach((hotel: any) => {
-            hotelsMap[String(hotel.id)] = hotel;
-          });
-          dispatch(setHotels(hotelsMap));
-        }
-      } catch (error) {
-        console.error("Помилка завантаження готелів:", error);
-      }
-    })();
-  }, [tours, selected, hotels, dispatch]);
+  const { tours, hotels, countries } = useCardHotels();
 
   if (loading) {
     return (

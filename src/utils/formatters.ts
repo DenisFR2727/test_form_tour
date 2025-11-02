@@ -15,4 +15,3 @@ export function formatPrice(amount: number, currency: string): string {
   const formattedUah = amountInUah.toLocaleString("uk-UA");
   return `${formattedUah} грн`;
 }
-
