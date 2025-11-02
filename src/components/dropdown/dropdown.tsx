@@ -1,12 +1,7 @@
 import { createPortal } from "react-dom";
-import { DropdownProps } from "./types";
-import type { Country, GeoEntity } from "../../api/api";
+import { DropdownListProps, DropdownProps } from "./types";
+import type { Country } from "../../api/api";
 
-interface DropdownListProps {
-  loading: boolean;
-  results: GeoEntity[];
-  handleSelect: (item: GeoEntity) => void;
-}
 import "../form/form.scss";
 import "./dropdown.scss";
 

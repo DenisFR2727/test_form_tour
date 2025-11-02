@@ -10,8 +10,8 @@ export function formatDate(dateString: string): string {
 // Форматування ціни з розділювачами тисяч та валютою
 export function formatPrice(amount: number, currency: string): string {
   // Конвертуємо USD в грн (приклад: 1 USD = 40 грн)
-  const exchangeRate = 40;
+  const exchangeRate = 42;
   const amountInUah = Math.round(amount * exchangeRate);
   const formattedUah = amountInUah.toLocaleString("uk-UA");
-  return `${formattedUah} грн`;
+  return `${formattedUah} грн ${currency}`;
 }

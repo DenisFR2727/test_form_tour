@@ -1,4 +1,4 @@
-import { useCallback, useEffect, RefObject } from "react";
+import { useCallback, useEffect } from "react";
 import {
   Country,
   ErrorResponse,
@@ -20,6 +20,8 @@ import {
   setTours,
 } from "./tourSlice";
 import { handleApiError } from "./error";
+
+type WritableRef<T> = { current: T };
 
 export default function useFetchTours() {
   const dispatch = useAppDispatch();
@@ -101,7 +103,7 @@ export const useFetchSearchResults = () => {
       token: string,
       delay: number,
       maxRetries: number,
-      currentTokenRef?: RefObject<string>
+      currentTokenRef?: WritableRef<string | null>
     ) => {
       // Перевіряємо чи це все ще актуальний токен
       if (
@@ -109,7 +111,7 @@ export const useFetchSearchResults = () => {
         currentTokenRef.current !== null &&
         currentTokenRef.current !== token
       ) {
-        return; // Ігноруємо якщо токен змінився
+        return;
       }
 
       await new Promise((resolve) => setTimeout(resolve, Math.max(0, delay)));
