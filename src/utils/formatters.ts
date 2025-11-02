@@ -8,7 +8,7 @@ export function formatDate(dateString: string): string {
 }
 
 // Форматування ціни з розділювачами тисяч та валютою
-export function formatPrice(amount: number, _currency: string): string {
+export function formatPrice(amount: number): string {
   const exchangeRate = 42;
   const amountInUah = Math.round(amount * exchangeRate);
   const formattedUah = amountInUah.toLocaleString("uk-UA");

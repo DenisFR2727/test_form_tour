@@ -70,7 +70,7 @@ export default function TourResults() {
                       {formatDate(tour.startDate)}
                     </p>
                     <p className="tour-card-price">
-                      {formatPrice(tour.amount, tour.currency)}
+                      {formatPrice(tour.amount)}
                     </p>
                     <Link to={`/tour/${tour.id}`} className="tour-card-link">
                       Відкрити ціну
@@ -81,9 +81,7 @@ export default function TourResults() {
                 <div className="tour-card-content">
                   <p>Готель не знайдено</p>
                   <p className="tour-card-date">{formatDate(tour.startDate)}</p>
-                  <p className="tour-card-price">
-                    {formatPrice(tour.amount, tour.currency)}
-                  </p>
+                  <p className="tour-card-price">{formatPrice(tour.amount)}</p>
                 </div>
               )}
             </div>

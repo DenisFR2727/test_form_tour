@@ -94,7 +94,7 @@ export default function TourDetailPage() {
                   <span>{formatDate(price.startDate)}</span>
                 </div>
                 <div className="tour-detail-price">
-                  {formatPrice(price.amount, price.currency)}
+                  {formatPrice(price.amount)}
                 </div>
               </div>
               <button className="tour-detail-button">Відкрити ціну</button>
@@ -109,7 +109,7 @@ export default function TourDetailPage() {
                 <span>{formatDate(price.startDate)}</span>
               </div>
               <div className="tour-detail-price">
-                {formatPrice(price.amount, price.currency)}
+                {formatPrice(price.amount)}
               </div>
             </div>
           </div>
