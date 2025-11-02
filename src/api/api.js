@@ -93,7 +93,16 @@ class DB {
     };
 
     this.searches = new Map();
+    this.prices = new Map();
   }
+
+  addPrice = (price) => {
+    this.prices.set(price.id, price);
+  };
+
+  getPrice = (priceId) => {
+    return this.prices.get(priceId) || null;
+  };
 
   getCountries = () => {
     return this.countries;
@@ -104,9 +113,11 @@ class DB {
   };
 
   getHotel = (hotelID) => {
+    // Convert hotelID to number for comparison
+    const hotelIdNum = Number(hotelID);
     const [, hotel] =
       Object.entries(this.getHotels()).find(
-        ([, hotel]) => hotel.id === hotelID
+        ([, hotel]) => hotel.id === hotelIdNum
       ) ?? [];
 
     if (hotel) {
@@ -204,8 +215,9 @@ class Search {
     return Object.fromEntries(
       Object.entries(hotels).map(([hotelID]) => {
         const price = Price.generate();
-
-        return [price.id, Object.assign(price, { hotelID })];
+        const priceWithHotel = Object.assign(price, { hotelID });
+        db.addPrice(priceWithHotel);
+        return [price.id, priceWithHotel];
       })
     );
   }
@@ -456,7 +468,24 @@ export const getPrice = (priceId) => {
     return Promise.reject(response);
   }
 
-  const price = Object.assign(Price.generate(), { id: priceId });
+  const price = db.getPrice(priceId);
+  
+  if (!price) {
+    const error = {
+      code: 404,
+      error: true,
+      message: "Offer with this ID was not found.",
+    };
+    const response = new Response(JSON.stringify(error), {
+      status: 404,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    return Promise.reject(response);
+  }
+
   const response = new Response(JSON.stringify(price), {
     status: 200,
     headers: {

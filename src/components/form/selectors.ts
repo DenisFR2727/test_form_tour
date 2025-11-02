@@ -1,9 +1,9 @@
-// import { RootState } from "../../store/store";
+import { RootState } from "../../store/store";
 
-// export const selectToursForRender = (state: RootState) =>
-//   state.tours.map((t) => ({
-//     id: t.id,
-//     name: t.name,
-//     price: t.price ?? "N/A",
-//     image: t.img ?? "no-image.png",
-//   }));
+export const querySelector = (state: RootState) => state.query;
+export const openSelector = (state: RootState) => state.open;
+
+export const loadingSelector = (state: RootState) => state.loading;
+export const selectedSelector = (state: RootState) => state.selected;
+export const resultsSelector = (state: RootState) => state.results;
+export const errorSelector = (state: RootState) => state.error;

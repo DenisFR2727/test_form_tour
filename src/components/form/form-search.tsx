@@ -1,8 +1,4 @@
-import { startSearchPrices, GeoEntity } from "../../api/api";
-import DropdownList from "../dropdown/dropdown";
-import Loading from "../loading/loading";
-
-import "./form.scss";
+import { startSearchPrices } from "../../api/api";
 import { useAppDispatch, useAppSelector } from "../../hooks/hooks";
 import useFetchTours, { useFetchSearchResults } from "./hooks";
 import {
@@ -14,32 +10,24 @@ import {
   setTours,
 } from "./tourSlice";
 import { handleApiError } from "./error";
+import { getCountryID } from "../../utils/getCountryId";
+import DropdownList from "../dropdown/dropdown";
 
-// Функція для витягнення countryID з GeoEntity
-function getCountryID(selected: GeoEntity | null): string | null {
-  if (!selected) return null;
+import {
+  errorSelector,
+  loadingSelector,
+  resultsSelector,
+  selectedSelector,
+} from "./selectors";
 
-  if (selected.type === "country") {
-    return selected.id;
-  }
-
-  if (selected.type === "hotel") {
-    return selected.countryId;
-  }
-
-  if (selected.type === "city" && selected.countryId) {
-    return selected.countryId;
-  }
-
-  return null;
-}
+import "./form.scss";
 
 export default function TourSearchForm() {
   const dispatch = useAppDispatch();
-  const loading = useAppSelector((state) => state.loading);
-  const selected = useAppSelector((state) => state.selected);
-  const results = useAppSelector((state) => state.results);
-  const error = useAppSelector((state) => state.error);
+  const loading = useAppSelector(loadingSelector);
+  const selected = useAppSelector(selectedSelector);
+  const results = useAppSelector(resultsSelector);
+  const error = useAppSelector(errorSelector);
 
   const { query, open, handleSelect } = useFetchTours();
   const { fetchSearchResults } = useFetchSearchResults();
@@ -83,35 +71,34 @@ export default function TourSearchForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="tour_search">
-      <h2 className="tour_search-title">Форма пошуку турів</h2>
-      <div className="input-wrapper">
-        <input
-          value={query}
-          onChange={(e) => {
-            dispatch(setQuery(e.target.value));
-            dispatch(setSelected(null));
-          }}
-          onFocus={() => {
-            dispatch(setOpen(true));
-          }}
-          onKeyDown={handleKeyDown}
-        />
-        <div id="overlay-dropdown"></div>
-        {open && (
-          <DropdownList
-            handleSelect={handleSelect}
-            loading={loading}
-            results={results}
+    <div className="form_content">
+      <form onSubmit={handleSubmit} className="tour_search">
+        <h2 className="tour_search-title">Форма пошуку турів</h2>
+        <div className="input-wrapper">
+          <input
+            value={query}
+            onChange={(e) => {
+              dispatch(setQuery(e.target.value));
+              dispatch(setSelected(null));
+            }}
+            onFocus={() => {
+              dispatch(setOpen(true));
+            }}
+            onKeyDown={handleKeyDown}
           />
-        )}
-      </div>
+          <div id="overlay-dropdown"></div>
+          {open && (
+            <DropdownList
+              handleSelect={handleSelect}
+              loading={loading}
+              results={results}
+            />
+          )}
+        </div>
 
-      <button type="submit">Знайти</button>
-      <div>
-        {loading && <Loading />}
-        {error && <p className="error">{error}</p>}
-      </div>
-    </form>
+        <button type="submit">Знайти</button>
+        <div>{error && <p className="error">{error}</p>}</div>
+      </form>
+    </div>
   );
 }

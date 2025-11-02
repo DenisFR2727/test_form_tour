@@ -20,13 +20,14 @@ import {
   setTours,
 } from "./tourSlice";
 import { handleApiError } from "./error";
+import { openSelector, querySelector } from "./selectors";
 
 type WritableRef<T> = { current: T };
 
 export default function useFetchTours() {
   const dispatch = useAppDispatch();
-  const query = useAppSelector((state) => state.query);
-  const open = useAppSelector((state) => state.open);
+  const query = useAppSelector(querySelector);
+  const open = useAppSelector(openSelector);
 
   // --- Loading country
   useEffect(() => {
