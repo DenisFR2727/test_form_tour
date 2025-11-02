@@ -18,7 +18,7 @@ export default function DropdownList({
   return (
     <DropdownPortal>
       <ul className="dropdown">
-        {loading && <li className="loading">Завантаження...</li>}
+        {/* {loading && <li className="loading">Завантаження...</li>} */}
         {!loading &&
           results.map((item) => (
             <li key={item.id} onClick={() => handleSelect(item)}>

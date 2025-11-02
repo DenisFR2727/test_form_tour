@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { GeoEntity, PriceOffer } from "../../api/api";
+import { GeoEntity, PriceOffer, Hotel } from "../../api/api";
 
 interface InitialStateTours {
   query: string;
@@ -8,7 +8,9 @@ interface InitialStateTours {
   loading: boolean;
   selected: GeoEntity | null;
   tours: PriceOffer[];
+  hotels: Record<string, Hotel>;
   error: string | null;
+  activeSearchToken: string | null;
 }
 
 const initialState: InitialStateTours = {
@@ -18,7 +20,9 @@ const initialState: InitialStateTours = {
   loading: false,
   selected: null,
   tours: [],
+  hotels: {},
   error: null,
+  activeSearchToken: null,
 };
 
 const tourSLice = createSlice({
@@ -46,6 +50,12 @@ const tourSLice = createSlice({
     setError(state, action: PayloadAction<string | null>) {
       state.error = action.payload;
     },
+    setHotels(state, action: PayloadAction<Record<string, Hotel>>) {
+      state.hotels = { ...state.hotels, ...action.payload };
+    },
+    setActiveSearchToken(state, action: PayloadAction<string | null>) {
+      state.activeSearchToken = action.payload;
+    },
   },
 });
 
@@ -57,5 +67,7 @@ export const {
   setSelected,
   setTours,
   setError,
+  setHotels,
+  setActiveSearchToken,
 } = tourSLice.actions;
 export default tourSLice.reducer;

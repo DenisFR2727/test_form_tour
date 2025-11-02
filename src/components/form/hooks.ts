@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, MutableRefObject } from "react";
 import {
   Country,
   ErrorResponse,
@@ -18,7 +18,9 @@ import {
   setResults,
   setSelected,
   setTours,
+  setActiveSearchToken,
 } from "./tourSlice";
+import { handleApiError } from "./error";
 
 export default function useFetchTours() {
   const dispatch = useAppDispatch();
@@ -41,7 +43,7 @@ export default function useFetchTours() {
         }));
         dispatch(setResults(countries));
       } catch (error) {
-        console.error("Помилка getCountries:", error);
+        dispatch(setError(handleApiError(error)));
       } finally {
         dispatch(setLoading(false));
       }
@@ -71,14 +73,7 @@ export default function useFetchTours() {
         const data: GeoResponse = await res.json();
         dispatch(setResults(Object.values(data)));
       } catch (error: unknown) {
-        let message = "An unknown error occurred";
-
-        if (error instanceof Error) {
-          message = error.message;
-        } else if (typeof error === "string") {
-          message = error;
-        }
-        dispatch(setError(message));
+        dispatch(setError(handleApiError(error)));
       } finally {
         dispatch(setLoading(false));
       }
@@ -103,16 +98,83 @@ export const useFetchSearchResults = () => {
   const dispatch = useAppDispatch();
 
   const fetchSearchResults = useCallback(
-    async (token: string, delay: number, maxRetries: number) => {
-      console.log(`⏳ Очікування ${delay}ms перед getSearchPrices...`);
+    async (
+      token: string,
+      delay: number,
+      maxRetries: number,
+      currentTokenRef?: MutableRefObject<string | null>
+    ) => {
+      // Перевіряємо чи це все ще актуальний токен
+      if (
+        currentTokenRef &&
+        currentTokenRef.current !== null &&
+        currentTokenRef.current !== token
+      ) {
+        return; // Ігноруємо якщо токен змінився
+      }
+
       await new Promise((resolve) => setTimeout(resolve, Math.max(0, delay)));
 
+      // Знову перевіряємо після затримки
+      if (
+        currentTokenRef &&
+        currentTokenRef.current !== null &&
+        currentTokenRef.current !== token
+      ) {
+        return;
+      }
+
       let attempt = 0;
-      while (attempt <= maxRetries) {
+      while (attempt < maxRetries) {
         attempt++;
+
+        // Перевіряємо перед кожним запитом
+        if (
+          currentTokenRef &&
+          currentTokenRef.current !== null &&
+          currentTokenRef.current !== token
+        ) {
+          return;
+        }
+
         try {
           const res = await getSearchPrices(token);
+
+          // Перевіряємо після запиту
+          if (
+            currentTokenRef &&
+            currentTokenRef.current !== null &&
+            currentTokenRef.current !== token
+          ) {
+            return;
+          }
+
+          if (!res.ok) {
+            const errorData = (await res.json()) as ErrorResponse;
+
+            if (errorData.code === 425 && errorData.waitUntil) {
+              const waitTime =
+                new Date(errorData.waitUntil).getTime() - Date.now();
+              await new Promise((r) => setTimeout(r, Math.max(0, waitTime)));
+              continue;
+            }
+
+            // Для 400 або 404
+            throw new Error(
+              `API error ${errorData.code}: ${errorData.message}`
+            );
+          }
+
           const data = await res.json();
+
+          // Перевіряємо перед обробкою даних
+          if (
+            currentTokenRef &&
+            currentTokenRef.current !== null &&
+            currentTokenRef.current !== token
+          ) {
+            return;
+          }
 
           if (data.status === "inProgress") {
             const wait = new Date(data.waitUntil).getTime() - Date.now();
@@ -121,23 +183,33 @@ export const useFetchSearchResults = () => {
           }
 
           if (data.status === "done" && data.results) {
-            dispatch(setTours(data.results));
-            break;
+            const resultsArray: PriceOffer[] = Object.values(data.results);
+            dispatch(setTours(resultsArray));
+            return;
           }
 
           if (data.prices && typeof data.prices === "object") {
-            const resultsArray: PriceOffer[] = Object.entries(data.prices).map(
-              ([key, value]) => ({ ...(value as PriceOffer), id: key })
-            );
+            const resultsArray: PriceOffer[] = Object.values(data.prices);
             dispatch(setTours(resultsArray));
-
-            break;
+            return;
           }
 
-          break;
+          return;
         } catch (error) {
-          attempt++;
-          if (attempt > maxRetries) throw error;
+          // Перевіряємо перед обробкою помилки
+          if (
+            currentTokenRef &&
+            currentTokenRef.current !== null &&
+            currentTokenRef.current !== token
+          ) {
+            return;
+          }
+
+          if (attempt >= maxRetries) {
+            const handledError = handleApiError(error);
+            dispatch(setError(handledError));
+            throw error;
+          }
           await new Promise((r) => setTimeout(r, 2000));
         }
       }
